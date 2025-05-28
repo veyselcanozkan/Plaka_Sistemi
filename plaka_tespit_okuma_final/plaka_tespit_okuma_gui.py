@@ -32,10 +32,10 @@ def process_image(image_path):
     img = cv2.imread(image_path)
     results = model(img)[0]
 
-    plate_text = ""
+    plate_texts = []  # Çoklu plakaları tutan liste
 
     if not results.boxes:
-        return "! Plaka tespit edilemedi.", img
+        return ["! Plaka tespit edilemedi."], img
 
     for box in results.boxes:
         x1, y1, x2, y2 = map(int, box.xyxy[0])
@@ -47,15 +47,19 @@ def process_image(image_path):
 
         config = r'--oem 3 --psm 8 -c tessedit_char_whitelist=ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
         text = pytesseract.image_to_string(contrast, config=config)
-        plate_text = ''.join(filter(str.isalnum, text)).strip()
+        plate = ''.join(filter(str.isalnum, text)).strip()
 
-        while plate_text and plate_text[0].isalpha():
-            plate_text = plate_text[1:].strip()
+        while plate and plate[0].isalpha():
+            plate = plate[1:].strip()
 
-        cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
-        #cv2.putText(img, f"Plaka: {plate_text}", (x1, y2 + 30), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
+        if plate:
+            plate_texts.append(plate)
+            cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
+            cv2.putText(img, plate, (x1, y2 + 30), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
+        else:
+            plate_texts.append("! Plaka okunamadı")
 
-    return plate_text if plate_text else "! Plaka okunamadı ya da eksik.", img
+    return plate_texts, img
 
 # Resim seçme ve işleme
 def select_image():
@@ -64,26 +68,28 @@ def select_image():
         title="Plakası Okunacak Araç Seçimi")
 
     if file_path:
-        result, processed_img = process_image(file_path)
+        results, processed_img = process_image(file_path)
 
-    if result.startswith("!"):
-        result_label.config(text=result)
-    else:
-        if result in registered_plates:
-            messagebox.showinfo("Bilgi", f"{result} plakalı araç zaten kayıtlı!")
-        else:
-            registered_plates.add(result)
-            result_area.insert(tk.END, result + '\n')
-            save_plate_to_txt(result)
+        found_any = False
+        for result in results:
+            if result.startswith("!"):
+                continue
 
-        result_label.config(text=f"Okunan Plaka: {result}")
+            found_any = True
+            if result in registered_plates:
+                messagebox.showinfo("Bilgi", f"{result} plakalı araç zaten kayıtlı!")
+            else:
+                registered_plates.add(result)
+                result_area.insert(tk.END, result + '\n')
+                save_plate_to_txt(result)
 
-    # Görsel
-    processed_img = cv2.cvtColor(processed_img, cv2.COLOR_BGR2RGB)
-    img_pil = Image.fromarray(processed_img).resize((250, 250))
-    img_tk = ImageTk.PhotoImage(img_pil)
-    image_label.config(image=img_tk)
-    image_label.image = img_tk
+        result_label.config(text="Okunan Plakalar:\n" + '\n'.join(results) if found_any else results[0])
+
+        processed_img = cv2.cvtColor(processed_img, cv2.COLOR_BGR2RGB)
+        img_pil = Image.fromarray(processed_img).resize((250, 250))
+        img_tk = ImageTk.PhotoImage(img_pil)
+        image_label.config(image=img_tk)
+        image_label.image = img_tk
 
 # Arayüz
 form = tk.Tk()
