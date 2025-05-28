@@ -21,7 +21,7 @@ Bu proje, araç plakalarını otomatik olarak algılayıp tanımayı amaçlayan 
 
 Aşağıdaki grafik, YOLOv8 modeliyle eğittiğimiz plaka tespit modelinin eğitim sürecindeki doğruluk, kayıp ve başarı metriklerini göstermektedir:
 
-![Eğitim Doğruluk Grafiği](./50292f99-38f6-43e9-80a2-9135251fa527.png)
+![Eğitim Doğruluk Grafiği](ModelDoğrulukTablosu.jpg)
 
 ### Açıklama:
 
