@@ -91,13 +91,6 @@ def select_image():
         image_label.config(image=img_tk)
         image_label.image = img_tk
 
-def clear_saved_plates():
-    if os.path.exists('plates.txt'):
-        open('plates.txt', 'w').close()  # Dosyanın içeriğini sil
-    registered_plates.clear()  # Bellekteki plakaları temizle
-    result_area.delete("1.0", tk.END)  # Text kutusunu temizle
-    messagebox.showinfo("Başarılı", "Tüm kayıtlı plakalar silindi.")
-
 # Arayüz
 form = tk.Tk()
 form.title('Plaka Tanıma Sistemi')
@@ -115,10 +108,6 @@ image_label.pack(pady=10)
 tk.Label(form, text="Kayıtlı Araçlar:", font=("Arial", 12), bg="#032263", fg="#E6EEFE").pack(fill="x")
 result_area = tk.Text(form, height=8, width=40, font=("Consolas", 12))
 result_area.pack(pady=10)
-
-tk.Button(form, text="Kayıtları Temizle", command=clear_saved_plates,
-          font=("Arial", 10), bg="#F66", fg="white").pack(pady=5)
-
 
 # Kayıtlı plakaları göstrme
 for plate in registered_plates:
